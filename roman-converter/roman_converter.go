@@ -28,13 +28,11 @@ func romanConverter(number int) string {
 	}
 
 	for i := 0; i < len(romans) || number > 0; i++ {
-		if number < romans[i].number {
-			continue
+		if number >= romans[i].number {
+			result += romans[i].symbol
+			number -= romans[i].number
+			i--
 		}
-
-		result += romans[i].symbol
-		number -= romans[i].number
-		i--
 	}
 
 	return result
