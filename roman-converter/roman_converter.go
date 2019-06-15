@@ -27,7 +27,7 @@ func romanConverter(number int) string {
 		romanSymbol{"I", 1},
 	}
 
-	for i := 0; i < len(romans) || number > 0; i++ {
+	for i := 0; i < len(romans) && number > 0; i++ {
 		if number >= romans[i].number {
 			result += romans[i].symbol
 			number -= romans[i].number
