@@ -12,9 +12,7 @@ type Todo struct {
 	Status string `json:"status"`
 }
 
-var todos = []Todo{
-	Todo{ID: 1, Title: "running", Status: "active"},
-}
+var todos = []Todo{}
 
 func postTodoHandler(c *gin.Context) {
 	t := Todo{}
@@ -33,7 +31,9 @@ func postTodoHandler(c *gin.Context) {
 func getTodoByIDHandler(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusOK, gin.H{})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
 		return
 	}
 
@@ -43,10 +43,46 @@ func getTodoByIDHandler(c *gin.Context) {
 			return
 		}
 	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Could not find this todo",
+	})
 }
 
 func getTodosHandler(c *gin.Context) {
 	c.JSON(http.StatusOK, todos)
+}
+
+func putTodoByIDHandler(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	t := Todo{}
+	err = c.ShouldBindJSON(&t)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	for i, elem := range todos {
+		if id == elem.ID {
+			todos[i].Status = t.Status 
+			todos[i].Title = t.Title
+			c.JSON(http.StatusOK, todos[i])
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Could not find this todo",
+	})
 }
 
 func main() {
@@ -54,5 +90,6 @@ func main() {
 	r.POST("/api/todos", postTodoHandler)
 	r.GET("/api/todos/:id", getTodoByIDHandler)
 	r.GET("/api/todos", getTodosHandler)
+	r.PUT("/api/todos/:id", putTodoByIDHandler)
 	r.Run(":1234")
 }
