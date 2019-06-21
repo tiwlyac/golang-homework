@@ -17,25 +17,15 @@ var todos = []Todo{}
 func postTodoHandler(c *gin.Context) {
 	t := Todo{}
 	err := c.ShouldBindJSON(&t)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-	} else {
-		t.ID = len(todos) + 1
-		todos = append(todos, t)
-		c.JSON(http.StatusCreated, t)
-	}
+	checkError(c, err)
+	t.ID = len(todos) + 1
+	todos = append(todos, t)
+	c.JSON(http.StatusCreated, t)
 }
 
 func getTodoByIDHandler(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
+	checkError(c, err)
 
 	for i, elem := range todos {
 		if id == elem.ID {
@@ -44,9 +34,7 @@ func getTodoByIDHandler(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Could not find this todo",
-	})
+	c.JSON(http.StatusOK, "Could not find this todo.")
 }
 
 func getTodosHandler(c *gin.Context) {
@@ -55,21 +43,10 @@ func getTodosHandler(c *gin.Context) {
 
 func putTodoByIDHandler(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
-
+	checkError(c, err)
 	t := Todo{}
 	err = c.ShouldBindJSON(&t)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"error": err.Error(),
-		})
-		return
-	}
+	checkError(c, err)
 
 	for i, elem := range todos {
 		if id == elem.ID {
@@ -80,9 +57,33 @@ func putTodoByIDHandler(c *gin.Context) {
 		}
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Could not find this todo",
-	})
+	c.JSON(http.StatusOK, "Could not find this todo.")
+}
+
+func deleteTodoByIDHandler(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	checkError(c, err)
+
+	for i, elem := range todos {
+		if id == elem.ID {
+			todos = remove(todos,i)
+			c.JSON(http.StatusOK, gin.H{ "status": "success" })
+			return
+		}
+	}
+
+	c.JSON(http.StatusOK, "Could not find this todo.")
+}
+
+func checkError(c *gin.Context, err error) {
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{ "error": err.Error() })
+		return
+	}
+}
+
+func remove(slice []Todo, s int) []Todo {
+    return append(slice[:s], slice[s+1:]...)
 }
 
 func main() {
@@ -91,5 +92,6 @@ func main() {
 	r.GET("/api/todos/:id", getTodoByIDHandler)
 	r.GET("/api/todos", getTodosHandler)
 	r.PUT("/api/todos/:id", putTodoByIDHandler)
+	r.DELETE("/api/todos/:id", deleteTodoByIDHandler)
 	r.Run(":1234")
 }
